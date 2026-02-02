@@ -2,65 +2,461 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>كشف حسابي</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>النظام الإداري الشامل - معاينة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* تنسيق التنقل الجانبي (Sidebar) */
+        .sidebar {
+            height: 100vh;
+            background-color: #343a40;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            right: 0;
+            width: 250px;
+            transition: all 0.3s;
+        }
+        .sidebar a {
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 18px;
+            color: #d1d1d1;
+            display: block;
+            cursor: pointer;
+        }
+        .sidebar a:hover, .sidebar a.active { background-color: #007bff; color: white; }
+        .sidebar i { margin-left: 10px; }
+        
+        /* تنسيق المحتوى الرئيسي */
+        .main-content { margin-right: 250px; padding: 20px; transition: all 0.3s; }
+        
+        /* البطاقات الاحصائية */
+        .stat-card { border-radius: 10px; padding: 20px; color: white; margin-bottom: 20px; }
+        .bg-purple { background-color: #6f42c1; }
+        .bg-orange { background-color: #fd7e14; }
+
+        /* تنسيق استمارة الصورة (Model 1) */
+        .paper-form {
+            background: white;
+            padding: 40px;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            max-width: 900px;
+            margin: auto;
+            position: relative;
+        }
+        .form-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        .iraq-logo { width: 80px; float: left; }
+        .form-title-box { border: 2px solid #000; padding: 5px; text-align: center; font-weight: bold; margin: 20px 0; }
+        .dashed-input { border: none; border-bottom: 1px dotted #000; width: 60%; outline: none; background: transparent; }
+        .check-box-group { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .signature-area { margin-top: 50px; text-align: center; }
+
+        /* إخفاء واظهار الأقسام */
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        /* شاشة تسجيل الدخول */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; z-index: 9999; display: flex;
+            align-items: center; justify-content: center;
+        }
+    </style>
 </head>
 <body>
-    <div class="container" style="max-width: 600px;">
-        
-        <button id="installAppBtn" class="btn btn-primary full-width hidden mb-2">📲 تثبيت التطبيق</button>
 
-        <div id="cust-login" class="card glass center-text mt-2 gsap-target">
-            <h2>👤 كشف الحساب</h2>
-            <p>أدخل رمزك الخاص (3 أرقام)</p>
-            <input type="tel" id="custPassInput" placeholder="XXX" maxlength="10" class="gsap-input" style="text-align:center; letter-spacing: 5px; font-weight: bold; font-size: 1.5rem;">
-            
-            <div class="flex center-flex mb-2" style="justify-content: center;">
-                <input type="checkbox" id="rememberMe" style="width: auto; margin: 0 0 0 10px;">
-                <label for="rememberMe" style="cursor: pointer;">حفظ دخولي وتثبيت التطبيق</label>
+    <div id="login-screen">
+        <div class="card p-4" style="width: 400px;">
+            <div class="text-center mb-4">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" width="80">
+                <h3 class="mt-2">تسجيل الدخول</h3>
+                <small class="text-muted">جرب: admin / admin</small><br>
+                <small class="text-muted">أو: user / 123</small>
             </div>
-
-            <button class="btn btn-success full-width gsap-btn" onclick="checkCustomerCode()">دخول</button>
-            <p id="msg" style="color:salmon;"></p>
-        </div>
-
-        <div id="confirm-identity" class="card glass center-text mt-2 hidden">
-            <h3>مرحباً 👋</h3>
-            <p>هل اسمك هو:</p>
-            <h2 id="confirmName" style="color: var(--primary);">...</h2>
-            <div class="flex flex-between mt-2">
-                <button class="btn btn-danger full-width" onclick="location.reload()">لا، ليس أنا</button>
-                <button class="btn btn-success full-width" onclick="confirmAndLogin()">نعم، دخول</button>
+            <div class="mb-3">
+                <label>اسم المستخدم</label>
+                <input type="text" id="username" class="form-control" placeholder="admin">
             </div>
-        </div>
-
-        <div id="cust-view" class="hidden">
-            <div id="paymentAlert" class="alert-box hidden">
-                <strong>⚠️ تنبيه:</strong> يرجى مراجعة المتجر لتسديد المستحقات.
+            <div class="mb-3">
+                <label>كلمة المرور</label>
+                <input type="password" id="password" class="form-control" placeholder="password">
             </div>
-
-            <div class="card glass center-text gsap-target" style="border-top: 5px solid var(--primary);">
-                <h2 id="cName">...</h2>
-                <small>الرصيد الحالي</small>
-                <div class="balance-display" id="cBalance" style="color: var(--danger)">0.00</div>
-            </div>
-
-            <a id="financeWaLink" href="#" target="_blank" class="btn btn-success full-width mb-2 gsap-btn">
-                💬 تواصل مع القسم المالي (واتساب)
-            </a>
-
-            <div class="card glass gsap-target">
-                <h3>سجل الحركات</h3>
-                <div id="cTransList"></div>
-            </div>
+            <button onclick="login()" class="btn btn-primary w-100">دخول</button>
         </div>
     </div>
-    
-    <script type="module" src="app.js"></script>
-    <script src="pwa.js"></script>
+
+    <div class="sidebar" id="sidebar">
+        <h4 class="text-center mb-4">لوحة التحكم</h4>
+        <a onclick="showSection('admin-panel')" id="link-admin"><i class="fas fa-chart-line"></i> الإدارة (Admin)</a>
+        <a onclick="showSection('agent-panel')" id="link-agent"><i class="fas fa-user-edit"></i> المخول (العميل)</a>
+        <a onclick="showSection('form-panel')" id="link-form"><i class="fas fa-file-alt"></i> الاستمارات (نموذج 1)</a>
+        <a onclick="logout()" class="text-danger mt-5"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+    </div>
+
+    <div class="main-content" id="main-content">
+        
+        <div id="admin-panel" class="section">
+            <h2><i class="fas fa-user-shield"></i> لوحة المدير العام</h2>
+            <hr>
+            
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card bg-primary">
+                        <h5>الإجمالي الكلي</h5>
+                        <h3 id="total-amount">0 د.ع</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-success">
+                        <h5>استقطاع 10%</h5>
+                        <h3 id="deduction-amount">0 د.ع</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-purple">
+                        <h5>عدد المخولين</h5>
+                        <h3>5</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card bg-orange">
+                        <h5>حالة النظام</h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="systemLock">
+                            <label class="form-check-label">إغلاق النظام</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4 p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" placeholder="بحث عن (اسم مخول، رقم وصل، تاريخ)...">
+                    </div>
+                    <div class="col-md-6 text-start">
+                        <button class="btn btn-success" onclick="alert('تم تصدير ملف Excel بنجاح!')"><i class="fas fa-file-excel"></i> تصدير اكسل</button>
+                        <button class="btn btn-dark"><i class="fas fa-calendar-alt"></i> جدولة الغلق</button>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4">سجل العمليات المالي</h5>
+            <table class="table table-bordered table-hover bg-white">
+                <thead class="table-dark">
+                    <tr>
+                        <th>المخول</th>
+                        <th>اسم المساهم</th>
+                        <th>المبلغ</th>
+                        <th>التاريخ</th>
+                        <th>رقم الوصل</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    <tr>
+                        <td>أحمد علي</td>
+                        <td>حسين محمد</td>
+                        <td>25,000</td>
+                        <td>2024-02-01</td>
+                        <td>1001</td>
+                        <td><button class="btn btn-sm btn-info">تفاصيل</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="agent-panel" class="section">
+            <h2><i class="fas fa-pen-fancy"></i> واجهة المخول</h2>
+            <div class="alert alert-info">مرحباً بك، سيتم ترقيم الوصولات تلقائياً بناءً على آخر إدخال.</div>
+            
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">إضافة وصل جديد</div>
+                        <div class="card-body">
+                            <form onsubmit="addEntry(event)">
+                                <div class="mb-2">
+                                    <label>عدد الدفاتر المستلمة</label>
+                                    <input type="number" class="form-control" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label>اسم المساهم</label>
+                                    <input type="text" id="contrib-name" class="form-control" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label>المبلغ</label>
+                                    <input type="number" id="contrib-amount" class="form-control" required>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col">
+                                        <label>التاريخ</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="col">
+                                        <label>رقم الوصل</label>
+                                        <input type="number" id="receipt-no" class="form-control" value="1002" readonly>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label>القاطع</label>
+                                    <select class="form-select">
+                                        <option>جنوب 1</option>
+                                        <option>جنوب 2</option>
+                                        <option>شمال</option>
+                                        <option>وسط</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">حفظ وترحيل</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>عملي اليوم</span>
+                            <button class="btn btn-success btn-sm">تصدير عملي Excel</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>الوصل</th>
+                                        <th>الاسم</th>
+                                        <th>المبلغ</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="agent-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="form-panel" class="section">
+            <div class="d-flex justify-content-between mb-3">
+                <h2><i class="fas fa-file-invoice"></i> نظام الاستمارات</h2>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="alert('تم استلام الاستمارة كـ PDF')">رفع PDF</button>
+                </div>
+            </div>
+
+            <div class="paper-form">
+                <div class="row form-header">
+                    <div class="col-4 text-end">
+                        <h6>نموذج رقم (1)</h6>
+                        <h6>الدائرة: ...................</h6>
+                        <h6>الموبايل: ...................</h6>
+                    </div>
+                    <div class="col-4 text-center">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f6/Emblem_of_Iraq_%282008%29.svg" width="60">
+                        <h5 class="mt-2">استمارة معلومات طلب</h5>
+                    </div>
+                    <div class="col-4 text-start">
+                        <h6>المحافظة: ...................</h6>
+                        <h6>اسم منضد الاستمارة: ...........</h6>
+                    </div>
+                </div>
+
+                <div class="form-title-box">
+                    <div class="row">
+                        <div class="col-6">رقم الطلب: <input type="text" class="dashed-input" style="width: 100px;"></div>
+                        <div class="col-6">تاريخ الطلب: 202 / <input type="text" class="dashed-input" style="width: 30px;"> / <input type="text" class="dashed-input" style="width: 30px;"></div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-decoration-underline">أولاً: معلومات صاحب الطلب</h6>
+                <div class="mb-3">
+                    (الاسم الرباعي واللقب) <input type="text" class="dashed-input" style="width: 40%;"> 
+                    اسم الأم الكامل <input type="text" class="dashed-input" style="width: 25%;">
+                </div>
+                <div class="mb-3">
+                    (رقم الباركود لصاحب الطلب) <input type="text" class="dashed-input">
+                </div>
+                <div class="mb-3">
+                    (نوع الطلب) <input type="text" class="dashed-input">
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">عنوان السكن: <input type="text" class="dashed-input"></div>
+                    <div class="col-6">توقيع مقدم الطلب: <input type="text" class="dashed-input"></div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">أقرب نقطة دالة: <input type="text" class="dashed-input"></div>
+                    <div class="col-6">رقم موبايل مقدم الطلب: <input type="text" class="dashed-input"></div>
+                </div>
+
+                <h6 class="fw-bold text-decoration-underline mt-4">ثانياً: لجنة التدقيق والكشف</h6>
+                
+                <div class="row mb-2">
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> هل صاحب الطلب من ذوي الشهداء
+                    </div>
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> هل صاحب الطلب من ذوي الجرحى
+                    </div>
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> هل صاحب الطلب من ذوي المعتقلين
+                    </div>
+                </div>
+                
+                <div class="row mb-2">
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> هل صاحب الطلب من حفظة القرآن
+                    </div>
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> هل صاحب الطلب ملتزم بصلاة الجماعة
+                    </div>
+                    <div class="col-4 check-box-group">
+                        <input type="checkbox" style="transform: scale(1.5);"> صاحب الطلب خريج وعاطل
+                    </div>
+                </div>
+
+                <div class="row mb-2 align-items-center">
+                    <div class="col-6">
+                        هل صاحب الطلب متفوق دراسياً <input type="checkbox" style="transform: scale(1.5);">
+                    </div>
+                    <div class="col-6">
+                        عدد الوصولات <input type="text" class="border border-dark text-center" style="width: 60px;">
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12 d-flex">
+                        <span style="width: 150px;">تفاصيل آخر استفادة</span>
+                        <input type="text" class="form-control border-dark" style="border-radius: 0;">
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-12 d-flex justify-content-end">
+                        <span class="ms-2">المبلغ التخميني</span>
+                        <input type="text" class="border border-dark" style="width: 150px;">
+                    </div>
+                </div>
+
+                <div class="row signature-area">
+                    <div class="col-3">
+                        <h6>عضو اللجنة</h6>
+                        <small>(اسم الحليف والتوقيع)</small>
+                    </div>
+                    <div class="col-3">
+                        <h6>عضو اللجنة</h6>
+                        <small>(اسم المساند والتوقيع)</small>
+                    </div>
+                    <div class="col-3">
+                        <h6>عضو اللجنة</h6>
+                        <small>(المسؤول المالي)</small>
+                    </div>
+                    <div class="col-3">
+                        <h6>رئيس اللجنة</h6>
+                        <small>(مسؤول المحافظة)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 p-3 bg-light border rounded">
+                <h5>إجراءات المدير (خاص بالاستمارة الحالية)</h5>
+                <button class="btn btn-success btn-lg mx-2" onclick="processForm('accept')"><i class="fas fa-check"></i> قبول وترحيل للإكسل</button>
+                <button class="btn btn-danger btn-lg mx-2" onclick="processForm('reject')"><i class="fas fa-times"></i> رفض</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. منطق تسجيل الدخول
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if (user === 'admin' && pass === 'admin') {
+                document.getElementById('login-screen').style.display = 'none';
+                showSection('admin-panel');
+                // إظهار كل الروابط للأدمن
+                document.getElementById('link-admin').style.display = 'block';
+            } else if (user === 'user' && pass === '123') {
+                document.getElementById('login-screen').style.display = 'none';
+                showSection('agent-panel');
+                // إخفاء رابط الأدمن للمستخدم العادي
+                document.getElementById('link-admin').style.display = 'none';
+            } else {
+                alert('بيانات خاطئة! جرب admin/admin');
+            }
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // 2. منطق التنقل بين الصفحات
+        function showSection(sectionId) {
+            // إخفاء كل الأقسام
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+            
+            // إظهار القسم المطلوب
+            document.getElementById(sectionId).classList.add('active');
+            
+            // تلوين الزر النشط
+            if(sectionId === 'admin-panel') document.getElementById('link-admin').classList.add('active');
+            if(sectionId === 'agent-panel') document.getElementById('link-agent').classList.add('active');
+            if(sectionId === 'form-panel') document.getElementById('link-form').classList.add('active');
+        }
+
+        // 3. منطق إضافة البيانات المالية (المخول)
+        let receiptCounter = 1002;
+        let totalAmount = 25000; // قيمة ابتدائية للتجربة
+
+        function addEntry(e) {
+            e.preventDefault();
+            const name = document.getElementById('contrib-name').value;
+            const amount = parseFloat(document.getElementById('contrib-amount').value);
+            const receipt = document.getElementById('receipt-no').value;
+
+            // إضافة للجدول في لوحة المخول
+            const tbody = document.getElementById('agent-table-body');
+            const row = `<tr><td>${receipt}</td><td>${name}</td><td>${amount}</td><td><span class="badge bg-success">تم الحفظ</span></td></tr>`;
+            tbody.innerHTML += row;
+
+            // تحديث لوحة الأدمن (محاكاة)
+            const adminTbody = document.getElementById('admin-table-body');
+            const adminRow = `<tr><td>أنت (مخول)</td><td>${name}</td><td>${amount}</td><td>${new Date().toLocaleDateString()}</td><td>${receipt}</td><td><button class="btn btn-sm btn-info">تفاصيل</button></td></tr>`;
+            adminTbody.innerHTML += adminRow;
+
+            // تحديث المجاميع
+            totalAmount += amount;
+            document.getElementById('total-amount').innerText = totalAmount.toLocaleString() + ' د.ع';
+            document.getElementById('deduction-amount').innerText = (totalAmount * 0.10).toLocaleString() + ' د.ع';
+
+            // زيادة رقم الوصل التالي
+            receiptCounter++;
+            document.getElementById('receipt-no').value = receiptCounter;
+            
+            alert('تم حفظ البيانات بنجاح!');
+            e.target.reset();
+            document.getElementById('receipt-no').value = receiptCounter; // إعادة وضع الرقم الجديد
+        }
+
+        // 4. منطق قبول ورفض الاستمارة
+        function processForm(action) {
+            if (action === 'accept') {
+                // هنا يتم كود الترحيل للإكسل في النسخة الحقيقية
+                alert('تم القبول! \nجاري ترحيل البيانات إلى ملف Excel المركزي...');
+            } else {
+                alert('تم الرفض وتغيير حالة الطلب.');
+            }
+        }
+    </script>
 </body>
 </html>
